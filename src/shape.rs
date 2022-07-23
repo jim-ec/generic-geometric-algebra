@@ -12,6 +12,40 @@ impl<const N: usize> Shape<N> {
     pub const ONE: Shape<N> = Shape([false; N]);
     pub const I: Shape<N> = Shape([true; N]);
 
+    /// Parity of the reversion operator, rewriting its factors in reverse order.
+    /// - `rev(eᵢⱼ) = eⱼᵢ = -eᵢⱼ` ⇔ `i ≠ j`
+    pub const fn rev(self) -> Sign {
+        let r = self.grade();
+        if r > 0 && odd(r * (r - 1) / 2) {
+            Sign::Neg
+        } else {
+            Sign::Pos
+        }
+    }
+
+    /// Parity of the grade involution, reversing the sign of odd blades.
+    pub const fn inv(self) -> Sign {
+        if even(self.grade()) {
+            Sign::Pos
+        } else {
+            Sign::Neg
+        }
+    }
+
+    /// Clifford Conjugate
+    pub const fn conj(self) -> Sign {
+        self.rev().mul(self.inv())
+    }
+
+    /// Poincaré duality operator
+    pub const fn dual(self) -> Shape<N> {
+        let mut dual = [false; N];
+        repeat!(i in 0..N {
+            dual[i] = !self.0[i];
+        });
+        Shape(dual)
+    }
+
     /// Compute the geometric product between two blades.
     /// - `eᵢeᵢ = 1`
     /// - `eᵢeⱼ = eᵢⱼ` ⇔ `i ≠ j`
@@ -46,26 +80,6 @@ impl<const N: usize> Shape<N> {
             Some((sign, product))
         } else {
             None
-        }
-    }
-
-    /// Parity of the reversion operator, rewriting its factors in reverse order.
-    /// - `rev(eᵢⱼ) = eⱼᵢ = -eᵢⱼ` ⇔ `i ≠ j`
-    pub const fn rev(self) -> Sign {
-        let r = self.grade();
-        if r > 0 && odd(r * (r - 1) / 2) {
-            Sign::Neg
-        } else {
-            Sign::Pos
-        }
-    }
-
-    /// Parity of the grade involution, reversing the sign of odd blades.
-    pub const fn inv(self) -> Sign {
-        if even(self.grade()) {
-            Sign::Pos
-        } else {
-            Sign::Neg
         }
     }
 
