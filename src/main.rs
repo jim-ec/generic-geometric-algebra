@@ -16,7 +16,10 @@ macro_rules! repeat {
     ($i:ident in $from:tt..$to:tt $body:block) => {{
         let mut $i = $from;
         while $i < $to {
-            $body
+            {
+                let $i = $i;
+                $body
+            }
             $i += 1;
         }
     }};
