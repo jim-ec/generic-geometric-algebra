@@ -1,7 +1,3 @@
-pub const fn basis_blade_count(n: usize) -> usize {
-    pow(2, n)
-}
-
 pub const fn binomial(n: usize, k: usize) -> usize {
     factorial(n) / (factorial(k) * factorial(n - k))
 }

@@ -32,12 +32,8 @@ mod mv;
 mod shape;
 mod sign;
 
-use algebra::Algebra;
-use common::*;
 use shape::Shape;
 use sign::Sign;
-
-use crate::metric::{Metric, Square};
 
 // TODO: Remove
 pub fn vanishable_shape_to_string<const N: usize>(x: Option<(Sign, Shape<N>)>) -> String {
@@ -54,33 +50,40 @@ pub fn shape_to_string<const N: usize>((sign, shape): (Sign, Shape<N>)) -> Strin
 }
 
 fn main() {
-    const N: usize = 2;
-    type VGA = Algebra<N>;
-    println!("Blade count: {}", basis_blade_count(N));
+    type GA = algebra::Complex;
 
-    let met = Metric([Square::Pos, Square::Pos]);
-    println!("Metric: {met}");
+    println!("Algebra Dimension: {}", GA::DIM);
+    println!("Blade count: {}", GA::BASIS_BLADE_COUNT);
 
-    let a = Shape([true, true]);
-    let b = Shape([true, true]);
+    let metric = GA::metric();
+    println!("Metric: {metric}");
 
-    println!("{a} {b} = {}", vanishable_shape_to_string(a.mul(b, met)));
-    println!("{a} ∧ {b} = {}", vanishable_shape_to_string(a.ext(b, met)));
+    let a = Shape([true]);
+    let b = Shape([true]);
+
+    println!("{a} {b} = {}", vanishable_shape_to_string(a.mul(b, metric)));
+    println!(
+        "{a} ∧ {b} = {}",
+        vanishable_shape_to_string(a.ext(b, metric))
+    );
     println!(
         "{a} >> {b} = {}",
-        vanishable_shape_to_string(a.left_contraction(b, met))
+        vanishable_shape_to_string(a.left_contraction(b, metric))
     );
     println!(
         "{a} << {b} = {}",
-        vanishable_shape_to_string(a.right_contraction(b, met))
+        vanishable_shape_to_string(a.right_contraction(b, metric))
     );
     println!(
         "{a} | {b} = {}",
-        vanishable_shape_to_string(a.inner(b, met))
+        vanishable_shape_to_string(a.inner(b, metric))
     );
-    println!("{a} ⋅ {b} = {}", vanishable_shape_to_string(a.dot(b, met)));
+    println!(
+        "{a} ⋅ {b} = {}",
+        vanishable_shape_to_string(a.dot(b, metric))
+    );
     println!(
         "{a} * {b} = {}",
-        vanishable_shape_to_string(a.scalar(b, met))
+        vanishable_shape_to_string(a.scalar(b, metric))
     );
 }

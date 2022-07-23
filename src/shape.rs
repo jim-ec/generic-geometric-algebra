@@ -192,10 +192,15 @@ impl<const N: usize> Shape<N> {
 
 impl<const N: usize> std::fmt::Display for Shape<N> {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        write!(f, "e")?;
-        for i in 0..N {
-            if self.0[i] {
-                write!(f, "{i}")?;
+        let r = self.grade();
+        if r == N {
+            write!(f, "i")?;
+        } else {
+            write!(f, "e")?;
+            for i in 0..N {
+                if self.0[i] {
+                    write!(f, "{i}")?;
+                }
             }
         }
         Ok(())
