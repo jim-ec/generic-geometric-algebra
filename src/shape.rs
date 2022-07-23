@@ -6,7 +6,7 @@ use crate::{
 
 /// Encodes a factorization of a blade:
 /// `A = B eᵢ` ⇔ `A[i]`
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Shape<const N: usize>(pub [bool; N]);
 
 impl<const N: usize> Shape<N> {
