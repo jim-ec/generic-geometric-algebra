@@ -61,14 +61,17 @@ fn main() {
     let a = Shape([true]);
     let b = Shape([true]);
 
-    println!("{a} {b} = {}", vanishable_shape_to_string(a.mul(b, metric)));
+    println!(
+        "{a} {b} = {}",
+        vanishable_shape_to_string(a.geometric(b, metric))
+    );
     println!(
         "{a} ∧ {b} = {}",
-        vanishable_shape_to_string(a.ext(b, metric))
+        vanishable_shape_to_string(a.exterior(b, metric))
     );
     println!(
         "{a} ∨ {b} = {}",
-        vanishable_shape_to_string(a.reg(b, metric))
+        vanishable_shape_to_string(a.regressive(b, metric))
     );
     println!(
         "{a} >> {b} = {}",
