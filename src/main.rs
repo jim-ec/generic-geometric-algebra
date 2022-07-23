@@ -1,7 +1,8 @@
 #![allow(incomplete_features)]
 // #![feature(const_for)]
 #![feature(generic_const_exprs)]
-// #![feature(adt_const_params)]
+#![feature(adt_const_params)]
+#![feature(inherent_associated_types)]
 #![feature(const_trait_impl)]
 #![feature(let_else)]
 #![feature(const_try)]
@@ -26,6 +27,7 @@ macro_rules! repeat {
 }
 
 mod algebra;
+mod blade;
 mod common;
 mod metric;
 mod mv;
