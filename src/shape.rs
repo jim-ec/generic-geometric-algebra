@@ -152,6 +152,18 @@ impl<const N: usize> Shape<N> {
     pub const fn anti_grade(self) -> usize {
         N - self.grade()
     }
+
+    /// Since shapes do not care about norms, use reversion instead of inversion.
+    /// Multivectors using this operation either need to scale the result by [rhs]'s reciprocal norm,
+    /// or normalize [rhs] before projecting.
+    ///
+    /// TODO: Remove this function from [Shape]?
+    pub const fn proj(self, rhs: Shape<N>) -> Option<(Sign, Shape<N>)> {
+        let (sign_inner, product_inner) = self.left_contraction(rhs)?;
+        let (sign_outer, product_outer) = product_inner.left_contraction(rhs)?;
+        let sign = sign_inner.mul(sign_outer);
+        Some((sign, product_outer))
+    }
 }
 
 impl<const N: usize> std::fmt::Display for Shape<N> {
