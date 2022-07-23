@@ -14,12 +14,15 @@ pub type Real = Algebra<0, 0, 0>;
 pub type Hyperbolic = Algebra<1, 0, 0>;
 pub type Complex = Algebra<0, 1, 0>;
 pub type Dual = Algebra<0, 0, 1>;
-pub type VGA2 = Algebra<2, 0, 0>;
-pub type VGA3 = Algebra<3, 0, 0>;
-pub type PGA2 = Algebra<2, 0, 1>;
-pub type PGA3 = Algebra<3, 0, 1>;
-pub type CGA2 = Algebra<3, 1, 0>;
-pub type CGA3 = Algebra<4, 1, 0>;
+pub type VGA<const D: usize> = Algebra<D, 0, 0>;
+pub type VGA2 = VGA<2>;
+pub type VGA3 = VGA<3>;
+pub type PGA<const D: usize> = Algebra<D, 0, 1>;
+pub type PGA2 = PGA<2>;
+pub type PGA3 = PGA<3>;
+pub type CGA<const D: usize> = Algebra<{ D + 1 }, 1, 0>;
+pub type CGA2 = CGA<2>;
+pub type CGA3 = CGA<3>;
 
 impl<const P: usize, const Q: usize, const R: usize> Algebra<P, Q, R> {
     pub const DIM: usize = P + Q + R;
