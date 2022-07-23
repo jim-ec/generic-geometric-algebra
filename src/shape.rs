@@ -100,6 +100,13 @@ impl<const N: usize> Shape<N> {
         }
     }
 
+    // Compute the regressive product between two blades using the identity
+    /// `A ∨ B = J(J(A) ∧ J(B))`
+    pub const fn reg(self, rhs: Shape<N>, metric: Metric<N>) -> Option<(Sign, Shape<N>)> {
+        let (sign, product) = self.dual().ext(rhs.dual(), metric)?;
+        Some((sign, product.dual()))
+    }
+
     /// Contraction of `self` onto `rhs`.
     /// Intuitively, this returns the sub-blade of `rhs` which is prependicular to `self.
     pub const fn left_contraction(

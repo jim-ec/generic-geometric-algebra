@@ -67,6 +67,10 @@ fn main() {
         vanishable_shape_to_string(a.ext(b, metric))
     );
     println!(
+        "{a} ∨ {b} = {}",
+        vanishable_shape_to_string(a.reg(b, metric))
+    );
+    println!(
         "{a} >> {b} = {}",
         vanishable_shape_to_string(a.left_contraction(b, metric))
     );
