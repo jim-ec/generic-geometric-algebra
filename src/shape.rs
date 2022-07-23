@@ -56,7 +56,7 @@ impl<const N: usize> Shape<N> {
         repeat!(i in 0..N {
             if self.0[i] {
                 // Flip sign for each permutation.
-                repeat!(j in 0..1 {
+                repeat!(j in 0..i {
                     if rhs.0[j] {
                         sign = sign.neg();
                     }
