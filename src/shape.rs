@@ -156,8 +156,7 @@ impl<const N: usize> Shape<N> {
     /// Since shapes do not care about norms, use reversion instead of inversion.
     /// Multivectors using this operation either need to scale the result by [rhs]'s reciprocal norm,
     /// or normalize [rhs] before projecting.
-    ///
-    /// TODO: Remove this function from [Shape]?
+    // TODO: Remove this function from [Shape]?
     pub const fn proj(self, rhs: Shape<N>) -> Option<(Sign, Shape<N>)> {
         let (sign_inner, product_inner) = self.left_contraction(rhs)?;
         let (sign_outer, product_outer) = product_inner.left_contraction(rhs)?;
@@ -167,7 +166,7 @@ impl<const N: usize> Shape<N> {
 }
 
 impl<const N: usize> std::fmt::Display for Shape<N> {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         write!(f, "e")?;
         for i in 0..N {
             if self.0[i] {
@@ -178,6 +177,7 @@ impl<const N: usize> std::fmt::Display for Shape<N> {
     }
 }
 
+// TODO: Remove
 pub fn shape_to_string<const N: usize>(x: Option<(Sign, Shape<N>)>) -> String {
     if let Some((sign, shape)) = x {
         format!("{sign}{shape}")

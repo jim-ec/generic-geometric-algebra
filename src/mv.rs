@@ -46,7 +46,7 @@ impl<const N: usize> std::fmt::Display for MV<N>
 where
     [f64; basis_blade_count(N)]:,
 {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         let mut factors = Vec::new();
 
         for i in 0..basis_blade_count(N) {

@@ -23,7 +23,7 @@ impl Sign {
 }
 
 impl std::fmt::Display for Sign {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         match self {
             Sign::Pos => Ok(()),
             Sign::Neg => write!(f, "-"),
