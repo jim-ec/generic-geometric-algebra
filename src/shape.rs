@@ -1,5 +1,6 @@
 use crate::{
     common::{even, odd},
+    metric::{Metric, Square},
     sign::Sign,
 };
 
@@ -68,6 +69,42 @@ impl<const N: usize> Shape<N> {
             }
         });
         (sign, Shape(product))
+    }
+
+    pub const fn mul_metric(self, rhs: Shape<N>, metric: Metric<N>) -> Option<(Sign, Shape<N>)> {
+        let mut product = [false; N];
+        let mut sign = Sign::Pos;
+        repeat!(i in 0..N {
+            if self.0[i] {
+                // Since shapes do not encode any order of factorization, a sign reversal
+                // must accomodate for each permutation.
+                repeat!(j in 0..i {
+                    if rhs.0[j] {
+                        sign = sign.neg();
+                    }
+                });
+            }
+            product[i] = match (self.0[i], rhs.0[i]) {
+                (true, false) | (false, true) => true,
+                (true, true) => match metric.0[i] {
+                    Square::Pos => {
+                        // eᵢeᵢ = 1
+                        false
+                    },
+                    Square::Neg => {
+                        // eᵢeᵢ = -1
+                        sign = sign.neg();
+                        false
+                    },
+                    Square::Zero => {
+                        // eᵢeᵢ = 0
+                        return None
+                    },
+                }
+                (false, false) => false,
+            }
+        });
+        Some((sign, Shape(product)))
     }
 
     // Compute the exterior product between two blades.
@@ -174,14 +211,5 @@ impl<const N: usize> std::fmt::Display for Shape<N> {
             }
         }
         Ok(())
-    }
-}
-
-// TODO: Remove
-pub fn shape_to_string<const N: usize>(x: Option<(Sign, Shape<N>)>) -> String {
-    if let Some((sign, shape)) = x {
-        format!("{sign}{shape}")
-    } else {
-        format!("0")
     }
 }
