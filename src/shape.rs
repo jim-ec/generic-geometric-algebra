@@ -70,6 +70,7 @@ impl<const N: usize> Shape<N> {
     }
 
     /// Contraction of `self` onto `rhs`.
+    /// Intuitively, this returns the sub-blade of `rhs` which is prependicular to `self.
     pub const fn left_contraction(self, rhs: Shape<N>) -> Option<(Sign, Shape<N>)> {
         let (sign, product) = self.mul(rhs);
         if let Some(r) = rhs.grade().checked_sub(self.grade()) && r == product.grade() {
@@ -81,6 +82,7 @@ impl<const N: usize> Shape<N> {
 
     /// Contraction of `self` by `rhs`.
     /// `A << B = (B~ >> A~)~`
+    /// Intuitively, this returns the sub-blade of `self` which is prependicular to `rhs.
     pub const fn right_contraction(self, rhs: Shape<N>) -> Option<(Sign, Shape<N>)> {
         let (sign, product) = rhs.left_contraction(self)?;
         let sign = sign.mul(rhs.rev()).mul(self.rev());
