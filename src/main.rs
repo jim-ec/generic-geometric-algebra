@@ -4,6 +4,8 @@
 // #![feature(adt_const_params)]
 #![feature(const_trait_impl)]
 #![feature(let_else)]
+#![feature(const_try)]
+#![feature(const_convert)]
 #![allow(dead_code)]
 
 /// Emulates `for ... in ... {}` loops in `const fn`s.
@@ -21,31 +23,33 @@ macro_rules! repeat {
 }
 
 mod algebra;
-mod blade;
 mod common;
 mod mv;
+mod shape;
 mod sign;
 
 use algebra::Algebra;
-use blade::Blade;
 use common::*;
 use mv::MV;
+use shape::Shape;
+
+use crate::shape::shape_to_string;
 
 fn main() {
     const N: usize = 2;
     type VGA = Algebra<N>;
     println!("Blade count: {}", basis_blade_count(N));
-    let a = Blade::new([true, true]);
-    let b = Blade::new([true, true]);
-    println!("{a} ∧ {b} = {}", a.ext(b));
-    println!("{a} >> {b} = {}", a.left_contraction(b));
-    println!("{a} << {b} = {}", a.right_contraction(b));
-    // println!("{a} | {b} = {}", a.inner(b));
-    println!("{a} ⋅ {b} = {}", a.dot(b));
-    println!("{a} * {b} = {}", a.scalar(b));
+    let a = Shape([false, true]);
+    let b = Shape([true, true]);
+    println!("{a} ∧ {b} = {}", shape_to_string(a.ext(b)));
+    println!("{a} >> {b} = {}", shape_to_string(a.left_contraction(b)));
+    println!("{a} << {b} = {}", shape_to_string(a.right_contraction(b)));
+    println!("{a} | {b} = {}", shape_to_string(a.inner(b)));
+    println!("{a} ⋅ {b} = {}", shape_to_string(a.dot(b)));
+    println!("{a} * {b} = {}", shape_to_string(a.scalar(b)));
 
-    let d: Blade<4> = Blade::new([true, true, true, true]);
-    println!("~{d} = {}", d.rev());
+    let d: Shape<4> = Shape([true, true, false, true]);
+    println!("~{d} = {}{d}", d.rev());
 
     let x: MV<N> = MV([2.0; basis_blade_count(N)]);
     let y: MV<N> = MV([1.0; basis_blade_count(N)]);
