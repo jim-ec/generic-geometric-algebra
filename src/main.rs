@@ -6,6 +6,7 @@
 #![feature(const_trait_impl)]
 #![feature(let_else)]
 #![feature(const_try)]
+#![feature(array_try_from_fn)]
 #![feature(const_convert)]
 #![allow(dead_code)]
 

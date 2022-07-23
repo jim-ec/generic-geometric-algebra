@@ -26,14 +26,15 @@ impl<const P: usize, const Q: usize, const R: usize> Algebra<P, Q, R> {
     pub const BASIS_BLADE_COUNT: usize = pow(2, Self::DIM);
 
     pub const fn metric() -> Metric<{ Self::DIM }> {
-        let mut squares = [Square::Pos; Self::DIM];
-        repeat!(i in P..{P + Q} {
-            squares[i] = Square::Neg;
-        });
-        repeat!(i in {P + Q}..{Self::DIM} {
-            squares[i] = Square::Zero;
-        });
-        Metric(squares)
+        Metric(core::array::from_fn(|i| {
+            if i < P {
+                Square::Pos
+            } else if i < P + Q {
+                Square::Neg
+            } else {
+                Square::Zero
+            }
+        }))
     }
 }
 
