@@ -79,10 +79,6 @@ fn main() {
         vanishable_shape_to_string(a.inner(b, metric))
     );
     println!(
-        "{a} ⋅ {b} = {}",
-        vanishable_shape_to_string(a.dot(b, metric))
-    );
-    println!(
         "{a} * {b} = {}",
         vanishable_shape_to_string(a.scalar(b, metric))
     );

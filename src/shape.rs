@@ -131,19 +131,6 @@ impl<const N: usize> Shape<N> {
     /// Bi-directional contraction.
     pub const fn inner(self, rhs: Shape<N>, metric: Metric<N>) -> Option<(Sign, Shape<N>)> {
         let (sign, product) = self.mul(rhs, metric)?;
-        if self.grade() != 0
-            && rhs.grade() != 0
-            && rhs.grade().abs_diff(self.grade()) == product.grade()
-        {
-            Some((sign, product))
-        } else {
-            None
-        }
-    }
-
-    /// Bi-directional contraction without edge-casing scalars.
-    pub const fn dot(self, rhs: Shape<N>, metric: Metric<N>) -> Option<(Sign, Shape<N>)> {
-        let (sign, product) = self.mul(rhs, metric)?;
         if rhs.grade().abs_diff(self.grade()) == product.grade() {
             Some((sign, product))
         } else {
