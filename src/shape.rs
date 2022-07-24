@@ -52,8 +52,9 @@ impl<const N: usize> Shape<N> {
     /// - `eᵢeⱼ = eᵢⱼ` ⇔ `i ≠ j`
     ///- `eᵢeⱼ = -eⱼeᵢ`
     pub const fn geometric(self, rhs: Shape<N>, metric: Metric<N>) -> Option<(Sign, Shape<N>)> {
+        let mut product = [false; N];
         let mut sign = Sign::Pos;
-        let product = core::array::try_from_fn(|i| {
+        repeat!(i in 0..N {
             if self.0[i] {
                 // Since shapes do not encode any order of factorization, a sign reversal
                 // must accomodate for each permutation.
@@ -63,26 +64,26 @@ impl<const N: usize> Shape<N> {
                     }
                 });
             }
-            match (self.0[i], rhs.0[i]) {
-                (true, false) | (false, true) => Some(true),
+            product[i] = match (self.0[i], rhs.0[i]) {
+                (true, false) | (false, true) => true,
                 (true, true) => match metric.0[i] {
                     Square::Pos => {
                         // eᵢeᵢ = 1
-                        Some(false)
-                    }
+                        false
+                    },
                     Square::Neg => {
                         // eᵢeᵢ = -1
                         sign = sign.neg();
-                        Some(false)
-                    }
+                        false
+                    },
                     Square::Zero => {
                         // eᵢeᵢ = 0
-                        None
-                    }
-                },
-                (false, false) => Some(false),
+                        return None
+                    },
+                }
+                (false, false) => false,
             }
-        })?;
+        });
         Some((sign, Shape(product)))
     }
 

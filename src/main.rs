@@ -7,7 +7,6 @@
 #![feature(const_trait_impl)]
 #![feature(let_else)]
 #![feature(const_try)]
-#![feature(array_try_from_fn)]
 #![feature(const_convert)]
 #![feature(never_type)]
 #![feature(const_option)]
