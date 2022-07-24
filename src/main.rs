@@ -3,11 +3,14 @@
 #![feature(generic_const_exprs)]
 #![feature(adt_const_params)]
 #![feature(inherent_associated_types)]
+#![feature(generic_associated_types)]
 #![feature(const_trait_impl)]
 #![feature(let_else)]
 #![feature(const_try)]
 #![feature(array_try_from_fn)]
 #![feature(const_convert)]
+#![feature(never_type)]
+#![feature(const_option)]
 #![allow(dead_code)]
 
 /// Emulates `for ... in ... {}` loops in `const fn`s.
