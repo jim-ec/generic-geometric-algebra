@@ -40,20 +40,6 @@ mod sign;
 use shape::Shape;
 use sign::Sign;
 
-// TODO: Remove
-pub fn vanishable_shape_to_string<const N: usize>(x: Option<(Sign, Shape<N>)>) -> String {
-    if let Some((sign, shape)) = x {
-        format!("{sign}{shape}")
-    } else {
-        format!("0")
-    }
-}
-
-// TODO: Remove
-pub fn shape_to_string<const N: usize>((sign, shape): (Sign, Shape<N>)) -> String {
-    format!("{sign}{shape}")
-}
-
 fn main() {
     type GA = algebra::Complex;
 
@@ -63,35 +49,14 @@ fn main() {
     let metric = GA::metric();
     println!("Metric: {metric}");
 
-    let a = Shape([true]);
-    let b = Shape([true]);
+    let a = Shape(Some((Sign::Pos, [true])));
+    let b = Shape(Some((Sign::Pos, [true])));
 
-    println!(
-        "{a} {b} = {}",
-        vanishable_shape_to_string(a.geometric(b, metric))
-    );
-    println!(
-        "{a} ∧ {b} = {}",
-        vanishable_shape_to_string(a.exterior(b, metric))
-    );
-    println!(
-        "{a} ∨ {b} = {}",
-        vanishable_shape_to_string(a.regressive(b, metric))
-    );
-    println!(
-        "{a} >> {b} = {}",
-        vanishable_shape_to_string(a.left_contraction(b, metric))
-    );
-    println!(
-        "{a} << {b} = {}",
-        vanishable_shape_to_string(a.right_contraction(b, metric))
-    );
-    println!(
-        "{a} | {b} = {}",
-        vanishable_shape_to_string(a.inner(b, metric))
-    );
-    println!(
-        "{a} * {b} = {}",
-        vanishable_shape_to_string(a.scalar(b, metric))
-    );
+    println!("{a} {b} = {}", a.geometric(b, metric));
+    println!("{a} ∧ {b} = {}", a.exterior(b, metric));
+    println!("{a} ∨ {b} = {}", a.regressive(b, metric));
+    println!("{a} >> {b} = {}", a.left_contraction(b, metric));
+    println!("{a} << {b} = {}", a.right_contraction(b, metric));
+    println!("{a} | {b} = {}", a.inner(b, metric));
+    println!("{a} * {b} = {}", a.scalar(b, metric));
 }

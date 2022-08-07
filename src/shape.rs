@@ -7,64 +7,77 @@ use crate::{
 /// Encodes a factorization of a blade:
 /// `A = B eᵢ` ⇔ `A[i]`
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub struct Shape<const N: usize>(pub [bool; N]);
+pub struct Shape<const N: usize>(pub Option<(Sign, [bool; N])>);
 
 impl<const N: usize> Shape<N> {
-    pub const ONE: Shape<N> = Shape([false; N]);
-    pub const I: Shape<N> = Shape([true; N]);
+    pub const ZERO: Shape<N> = Shape(None);
+    pub const ONE: Shape<N> = Shape(Some((Sign::Pos, [false; N])));
+    pub const I: Shape<N> = Shape(Some((Sign::Pos, [true; N])));
+
+    // pub const N: usize = N;
+    pub const fn foo(self) -> usize {
+        N
+    }
 
     /// Parity of the reversion operator, rewriting its factors in reverse order.
     /// - `rev(eᵢⱼ) = eⱼᵢ = -eᵢⱼ` ⇔ `i ≠ j`
-    pub const fn reverse(self) -> Sign {
-        let r = self.grade();
-        if r > 0 && odd(r * (r - 1) / 2) {
-            Sign::Neg
+    pub const fn reverse(self) -> Shape<N> {
+        if let Some(r) = self.grade() && r > 0 && odd(r * (r - 1) / 2) {
+            self.neg()
         } else {
-            Sign::Pos
+            self
         }
     }
 
     /// Parity of the grade involution, reversing the sign of odd blades.
-    pub const fn involute(self) -> Sign {
-        if even(self.grade()) {
-            Sign::Pos
+    pub const fn involute(self) -> Shape<N> {
+        if let Some(r) = self.grade() && even(r) {
+            self
         } else {
-            Sign::Neg
+            self.neg()
         }
     }
 
     /// Clifford Conjugate
-    pub const fn conjugate(self) -> Sign {
-        self.reverse().mul(self.involute())
+    pub const fn conjugate(self) -> Shape<N> {
+        self.reverse().involute()
+    }
+
+    pub const fn neg(self) -> Shape<N> {
+        let Some((sign, factors)) = self.0 else { return Shape::ZERO };
+        Shape(Some((sign.neg(), factors)))
     }
 
     /// Poincaré duality operator
     pub const fn dual(self) -> Shape<N> {
+        let Some(rhs) = self.0 else { return Shape::ZERO };
         let mut dual = [false; N];
         repeat!(i in 0..N {
-            dual[i] = !self.0[i];
+            dual[i] = !rhs.1[i];
         });
-        Shape(dual)
+        Shape(Some((rhs.0, dual)))
     }
 
     /// Compute the geometric product between two blades.
     /// - `eᵢeᵢ = 1`
     /// - `eᵢeⱼ = eᵢⱼ` ⇔ `i ≠ j`
     ///- `eᵢeⱼ = -eⱼeᵢ`
-    pub const fn geometric(self, rhs: Shape<N>, metric: Metric<N>) -> Option<(Sign, Shape<N>)> {
+    pub const fn geometric(self, rhs: Shape<N>, metric: Metric<N>) -> Shape<N> {
+        let Some(lhs) = self.0 else { return Shape::ZERO };
+        let Some(rhs) = rhs.0 else { return Shape::ZERO };
         let mut product = [false; N];
-        let mut sign = Sign::Pos;
+        let mut sign = lhs.0.mul(rhs.0);
         repeat!(i in 0..N {
-            if self.0[i] {
+            if lhs.1[i] {
                 // Since shapes do not encode any order of factorization, a sign reversal
                 // must accomodate for each permutation.
                 repeat!(j in 0..i {
-                    if rhs.0[j] {
+                    if rhs.1[j] {
                         sign = sign.neg();
                     }
                 });
             }
-            product[i] = match (self.0[i], rhs.0[i]) {
+            product[i] = match (lhs.1[i], rhs.1[i]) {
                 (true, false) | (false, true) => true,
                 (true, true) => match metric.0[i] {
                     Square::Pos => {
@@ -78,121 +91,122 @@ impl<const N: usize> Shape<N> {
                     },
                     Square::Zero => {
                         // eᵢeᵢ = 0
-                        return None
+                        return Shape::ZERO
                     },
                 }
                 (false, false) => false,
             }
         });
-        Some((sign, Shape(product)))
+        Shape(Some((sign, product)))
     }
 
     // Compute the exterior product between two blades.
     /// - `eᵢ ∧ eᵢ = 0`
     /// - `eᵢ ∧ eⱼ = eᵢⱼ` ⇔ `i ≠ j`
     ///- `eᵢ ∧ eⱼ = -eⱼeᵢ`
-    pub const fn exterior(self, rhs: Shape<N>, metric: Metric<N>) -> Option<(Sign, Shape<N>)> {
-        let (sign, product) = self.geometric(rhs, metric)?;
-        if self.grade() + rhs.grade() == product.grade() {
-            Some((sign, product))
+    pub const fn exterior(self, rhs: Shape<N>, metric: Metric<N>) -> Shape<N> {
+        let product = self.geometric(rhs, metric);
+
+        if let Some(r) = rhs.grade()
+            && let Some(l) = self.grade()
+            && let Some(p) =product.grade()
+            && r + l == p
+        {
+            product
         } else {
-            None
+            Shape::ZERO
         }
     }
 
     // Compute the regressive product between two blades using the identity
     /// `A ∨ B = J(J(A) ∧ J(B))`
-    pub const fn regressive(self, rhs: Shape<N>, metric: Metric<N>) -> Option<(Sign, Shape<N>)> {
-        let (sign, product) = self.dual().exterior(rhs.dual(), metric)?;
-        Some((sign, product.dual()))
+    pub const fn regressive(self, rhs: Shape<N>, metric: Metric<N>) -> Shape<N> {
+        self.dual().exterior(rhs.dual(), metric).dual()
     }
 
     /// Contraction of `self` onto `rhs`.
     /// Intuitively, this returns the sub-blade of `rhs` which is prependicular to `self.
-    pub const fn left_contraction(
-        self,
-        rhs: Shape<N>,
-        metric: Metric<N>,
-    ) -> Option<(Sign, Shape<N>)> {
-        let (sign, product) = self.geometric(rhs, metric)?;
-        if let Some(r) = rhs.grade().checked_sub(self.grade()) && r == product.grade() {
-            Some((sign, product))
+    pub const fn left_contraction(self, rhs: Shape<N>, metric: Metric<N>) -> Shape<N> {
+        let product = self.geometric(rhs, metric);
+
+        if let Some(r) = rhs.grade()
+            && let Some(l) = self.grade()
+            && let Some(p) = product.grade()
+            && let Some(q) = r.checked_sub(l)
+            && q == p
+        {
+            product
         } else {
-            None
+            Shape::ZERO
         }
     }
 
     /// Contraction of `self` by `rhs`.
     /// `A << B = (B~ >> A~)~`
     /// Intuitively, this returns the sub-blade of `self` which is prependicular to `rhs.
-    pub const fn right_contraction(
-        self,
-        rhs: Shape<N>,
-        metric: Metric<N>,
-    ) -> Option<(Sign, Shape<N>)> {
-        let (sign, product) = rhs.left_contraction(self, metric)?;
-        let sign = sign.mul(rhs.reverse()).mul(self.reverse());
-        Some((sign, product))
+    pub const fn right_contraction(self, rhs: Shape<N>, metric: Metric<N>) -> Shape<N> {
+        rhs.reverse()
+            .left_contraction(self.reverse(), metric)
+            .reverse()
     }
 
     /// Bi-directional contraction.
-    pub const fn inner(self, rhs: Shape<N>, metric: Metric<N>) -> Option<(Sign, Shape<N>)> {
-        let (sign, product) = self.geometric(rhs, metric)?;
-        if rhs.grade().abs_diff(self.grade()) == product.grade() {
-            Some((sign, product))
+    pub const fn inner(self, rhs: Shape<N>, metric: Metric<N>) -> Shape<N> {
+        let product = self.geometric(rhs, metric);
+
+        if let Some(r) = rhs.grade()
+            && let Some(l) = self.grade()
+            && let Some(p) = product.grade()
+            && r.abs_diff(l) == p
+        {
+            product
         } else {
-            None
+            Shape::ZERO
         }
     }
 
     /// Scalar product, producing non-zero scalars only when grades match.
     /// In that case, the result can be interpreted as a metric between blades:
     /// `A~ * A` can be used as the squared norm of `A`.
-    pub const fn scalar(self, rhs: Shape<N>, metric: Metric<N>) -> Option<(Sign, Shape<N>)> {
-        let (sign, product) = self.geometric(rhs, metric)?;
-        if product.grade() == 0 {
-            Some((sign, product))
+    pub const fn scalar(self, rhs: Shape<N>, metric: Metric<N>) -> Shape<N> {
+        let product = self.geometric(rhs, metric);
+        if let Some(p) = product.grade() && p == 0 {
+            product
         } else {
-            None
+            Shape::ZERO
         }
     }
 
     /// The *grade* (sometime also called *step*) of this blade, equating to the number of distinct factors.
-    pub const fn grade(self) -> usize {
+    /// Returns [None] if this shape is vanishing.
+    pub const fn grade(self) -> Option<usize> {
+        let (_, factors) = self.0?;
         let mut grade = 0;
         repeat!(i in 0..N {
-            if self.0[i] {
+            if factors[i] {
                 grade += 1;
             }
         });
-        grade
+        Some(grade)
     }
 
-    pub const fn anti_grade(self) -> usize {
-        N - self.grade()
-    }
-
-    /// Since shapes do not care about norms, use reversion instead of inversion.
-    /// Multivectors using this operation either need to scale the result by [rhs]'s reciprocal norm,
-    /// or normalize [rhs] before projecting.
-    // TODO: Remove this function from [Shape]?
-    pub const fn project(self, rhs: Shape<N>, metric: Metric<N>) -> Option<(Sign, Shape<N>)> {
-        let (sign_inner, product_inner) = self.left_contraction(rhs, metric)?;
-        let (sign_outer, product_outer) = product_inner.left_contraction(rhs, metric)?;
-        let sign = sign_inner.mul(sign_outer);
-        Some((sign, product_outer))
+    pub const fn anti_grade(self) -> Option<usize> {
+        Some(N - self.grade()?)
     }
 }
 
 impl<const N: usize> std::fmt::Display for Shape<N> {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        let r = self.grade();
+        let (Some(r), Some((sign, factors))) = (self.grade(), self.0) else {
+            return write!(f, "0")
+        };
+        write!(f, "{sign}")?;
         if r == N {
             write!(f, "i")?;
         } else {
             write!(f, "e")?;
             for i in 0..N {
-                if self.0[i] {
+                if factors[i] {
                     write!(f, "{i}")?;
                 }
             }
