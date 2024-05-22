@@ -10,6 +10,7 @@
 #![allow(dead_code)]
 #![feature(let_chains)]
 #![feature(try_trait_v2)]
+#![feature(decl_macro)]
 
 mod algebra;
 mod blade;

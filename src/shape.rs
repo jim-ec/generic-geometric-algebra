@@ -2,11 +2,10 @@ use std::marker::ConstParamTy;
 
 use crate::{
     common::{even, odd},
+    macros::{repeat, yeet},
     maybe::Maybe::{self, Just, Nothing},
     metric::{Metric, Square},
-    repeat,
     sign::Sign,
-    yeet,
 };
 
 /// Encodes a factorization of a blade:
