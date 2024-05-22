@@ -1,3 +1,4 @@
+#![allow(dead_code)]
 #![allow(incomplete_features)]
 #![feature(const_for)]
 #![feature(generic_const_exprs)]
@@ -7,7 +8,6 @@
 #![feature(const_try)]
 #![feature(never_type)]
 #![feature(const_option)]
-#![allow(dead_code)]
 #![feature(let_chains)]
 #![feature(try_trait_v2)]
 #![feature(decl_macro)]

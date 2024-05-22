@@ -31,19 +31,3 @@ impl<T> Try for Maybe<T> {
         }
     }
 }
-
-pub fn simple_try_fold_3<A, T, R: Try<Output = A>>(
-    iter: impl Iterator<Item = T>,
-    mut accum: A,
-    mut f: impl FnMut(A, T) -> R,
-) -> R {
-    for x in iter {
-        let cf = f(accum, x).branch();
-        match cf {
-            ControlFlow::Continue(a) => accum = a,
-            ControlFlow::Break(r) => return R::from_residual(r),
-        }
-        // accum = f(accum, x)?;
-    }
-    R::from_output(accum)
-}
