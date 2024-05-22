@@ -10,12 +10,9 @@ pub enum Maybe<T> {
     Nothing,
 }
 
-impl<T> FromResidual<()> for Maybe<T> {
-    fn from_residual(_: ()) -> Self {
-        Self::Nothing
-    }
-}
-
+/// This compiles but is unuable because [FromResidual] and [Try]
+/// are not marked with `#[const_trait]`.
+#[allow(dead_code)]
 impl<T> Try for Maybe<T> {
     type Output = T;
     type Residual = ();
@@ -29,5 +26,12 @@ impl<T> Try for Maybe<T> {
             Maybe::Just(output) => ControlFlow::Continue(output),
             Maybe::Nothing => ControlFlow::Break(()),
         }
+    }
+}
+
+#[allow(dead_code)]
+impl<T> FromResidual<()> for Maybe<T> {
+    fn from_residual(_: ()) -> Self {
+        Self::Nothing
     }
 }
