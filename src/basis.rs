@@ -8,24 +8,20 @@ use crate::{
     sign::Sign,
 };
 
-/// Encodes a factorization of a blade:
-/// `A = B eᵢ` ⇔ `A[i]`
+/// Encodes the basis of a blade such that `A = B eᵢ` ⇔ `A[i]`
+/// The encoding is chosen in a way that is order-independent.
+/// Therefore the sign of the basis is stored separately.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, ConstParamTy)]
-pub struct Shape<const N: usize>(pub Maybe<(Sign, [bool; N])>);
+pub struct Basis<const N: usize>(pub Maybe<(Sign, [bool; N])>);
 
-impl<const N: usize> Shape<N> {
-    pub const ZERO: Shape<N> = Shape(Nothing);
-    pub const ONE: Shape<N> = Shape(Just((Sign::Pos, [false; N])));
-    pub const I: Shape<N> = Shape(Just((Sign::Pos, [true; N])));
-
-    // pub const N: usize = N;
-    pub const fn foo(self) -> usize {
-        N
-    }
+impl<const N: usize> Basis<N> {
+    pub const ZERO: Basis<N> = Basis(Nothing);
+    pub const ONE: Basis<N> = Basis(Just((Sign::Pos, [false; N])));
+    pub const I: Basis<N> = Basis(Just((Sign::Pos, [true; N])));
 
     /// Parity of the reversion operator, rewriting its factors in reverse order.
     /// - `rev(eᵢⱼ) = eⱼᵢ = -eᵢⱼ` ⇔ `i ≠ j`
-    pub const fn reverse(self) -> Shape<N> {
+    pub const fn reverse(self) -> Basis<N> {
         if let Just(r) = self.grade()
             && r > 0
             && odd(r * (r - 1) / 2)
@@ -37,7 +33,7 @@ impl<const N: usize> Shape<N> {
     }
 
     /// Parity of the grade involution, reversing the sign of odd blades.
-    pub const fn involute(self) -> Shape<N> {
+    pub const fn involute(self) -> Basis<N> {
         if let Just(r) = self.grade()
             && even(r)
         {
@@ -48,44 +44,43 @@ impl<const N: usize> Shape<N> {
     }
 
     /// Clifford Conjugate
-    pub const fn conjugate(self) -> Shape<N> {
+    pub const fn conjugate(self) -> Basis<N> {
         self.reverse().involute()
     }
 
-    pub const fn neg(self) -> Shape<N> {
+    pub const fn neg(self) -> Basis<N> {
         let Just((sign, factors)) = self.0 else {
-            return Shape::ZERO;
+            return Basis::ZERO;
         };
-        Shape(Just((sign.neg(), factors)))
+        Basis(Just((sign.neg(), factors)))
     }
 
     /// Poincaré duality operator
-    pub const fn dual(self) -> Shape<N> {
+    pub const fn dual(self) -> Basis<N> {
         let Just(rhs) = self.0 else {
-            return Shape::ZERO;
+            return Basis::ZERO;
         };
         let mut dual = [false; N];
         repeat!(i in 0..N {
             dual[i] = !rhs.1[i];
         });
-        Shape(Just((rhs.0, dual)))
+        Basis(Just((rhs.0, dual)))
     }
 
     /// Compute the geometric product between two blades.
     /// - `eᵢeᵢ = 1`
     /// - `eᵢeⱼ = eᵢⱼ` ⇔ `i ≠ j`
     ///- `eᵢeⱼ = -eⱼeᵢ`
-    pub const fn geometric(self, rhs: Shape<N>, metric: Metric<N>) -> Shape<N> {
+    pub const fn geometric(self, rhs: Basis<N>, metric: Metric<N>) -> Basis<N> {
         let Just(lhs) = self.0 else {
-            return Shape::ZERO;
+            return Basis::ZERO;
         };
-        let Just(rhs) = rhs.0 else { return Shape::ZERO };
+        let Just(rhs) = rhs.0 else { return Basis::ZERO };
         let mut product = [false; N];
         let mut sign = lhs.0.mul(rhs.0);
         repeat!(i in 0..N {
             if lhs.1[i] {
-                // Since shapes do not encode any order of factorization, a sign reversal
-                // must accomodate for each permutation.
+                // Each permutation of the factors of the geometric product will reverse the sign.
                 repeat!(j in 0..i {
                     if rhs.1[j] {
                         sign = sign.neg();
@@ -106,20 +101,20 @@ impl<const N: usize> Shape<N> {
                     },
                     Square::Zero => {
                         // eᵢeᵢ = 0
-                        return Shape::ZERO
+                        return Basis::ZERO
                     },
                 }
                 (false, false) => false,
             }
         });
-        Shape(Just((sign, product)))
+        Basis(Just((sign, product)))
     }
 
     // Compute the exterior product between two blades.
     /// - `eᵢ ∧ eᵢ = 0`
     /// - `eᵢ ∧ eⱼ = eᵢⱼ` ⇔ `i ≠ j`
     ///- `eᵢ ∧ eⱼ = -eⱼeᵢ`
-    pub const fn exterior(self, rhs: Shape<N>, metric: Metric<N>) -> Shape<N> {
+    pub const fn exterior(self, rhs: Basis<N>, metric: Metric<N>) -> Basis<N> {
         let product = self.geometric(rhs, metric);
 
         if let Just(r) = rhs.grade()
@@ -129,19 +124,19 @@ impl<const N: usize> Shape<N> {
         {
             product
         } else {
-            Shape::ZERO
+            Basis::ZERO
         }
     }
 
     // Compute the regressive product between two blades using the identity
     /// `A ∨ B = J(J(A) ∧ J(B))`
-    pub const fn regressive(self, rhs: Shape<N>, metric: Metric<N>) -> Shape<N> {
+    pub const fn regressive(self, rhs: Basis<N>, metric: Metric<N>) -> Basis<N> {
         self.dual().exterior(rhs.dual(), metric).dual()
     }
 
     /// Contraction of `self` onto `rhs`.
     /// Intuitively, this returns the sub-blade of `rhs` which is prependicular to `self.
-    pub const fn left_contraction(self, rhs: Shape<N>, metric: Metric<N>) -> Shape<N> {
+    pub const fn left_contraction(self, rhs: Basis<N>, metric: Metric<N>) -> Basis<N> {
         let product = self.geometric(rhs, metric);
 
         if let Just(r) = rhs.grade()
@@ -152,21 +147,21 @@ impl<const N: usize> Shape<N> {
         {
             product
         } else {
-            Shape::ZERO
+            Basis::ZERO
         }
     }
 
     /// Contraction of `self` by `rhs`.
     /// `A << B = (B~ >> A~)~`
     /// Intuitively, this returns the sub-blade of `self` which is prependicular to `rhs.
-    pub const fn right_contraction(self, rhs: Shape<N>, metric: Metric<N>) -> Shape<N> {
+    pub const fn right_contraction(self, rhs: Basis<N>, metric: Metric<N>) -> Basis<N> {
         rhs.reverse()
             .left_contraction(self.reverse(), metric)
             .reverse()
     }
 
     /// Bi-directional contraction.
-    pub const fn inner(self, rhs: Shape<N>, metric: Metric<N>) -> Shape<N> {
+    pub const fn inner(self, rhs: Basis<N>, metric: Metric<N>) -> Basis<N> {
         let product = self.geometric(rhs, metric);
 
         if let Just(r) = rhs.grade()
@@ -176,26 +171,26 @@ impl<const N: usize> Shape<N> {
         {
             product
         } else {
-            Shape::ZERO
+            Basis::ZERO
         }
     }
 
     /// Scalar product, producing non-zero scalars only when grades match.
     /// In that case, the result can be interpreted as a metric between blades:
     /// `A~ * A` can be used as the squared norm of `A`.
-    pub const fn scalar(self, rhs: Shape<N>, metric: Metric<N>) -> Shape<N> {
+    pub const fn scalar(self, rhs: Basis<N>, metric: Metric<N>) -> Basis<N> {
         let product = self.geometric(rhs, metric);
         if let Just(p) = product.grade()
             && p == 0
         {
             product
         } else {
-            Shape::ZERO
+            Basis::ZERO
         }
     }
 
-    /// The *grade* (Justtime also called *step*) of this blade, equating to the number of distinct factors.
-    /// Returns [Nothing] if this shape is vanishing.
+    /// The *grade* (Sometimes also called *step*) of this blade, equating to the number of distinct factors.
+    /// Returns [Nothing] if this basis vanishes.
     pub const fn grade(self) -> Maybe<usize> {
         let (_, factors) = yeet!(self.0);
         let mut grade = 0;
@@ -212,7 +207,7 @@ impl<const N: usize> Shape<N> {
     }
 }
 
-impl<const N: usize> std::fmt::Display for Shape<N> {
+impl<const N: usize> std::fmt::Display for Basis<N> {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         let (Just(r), Just((sign, factors))) = (self.grade(), self.0) else {
             return write!(f, "0");

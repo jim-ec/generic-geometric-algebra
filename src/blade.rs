@@ -1,8 +1,8 @@
-use crate::{maybe::Maybe::Just, metric::Metric, shape::Shape};
+use crate::{basis::Basis, maybe::Maybe::Just, metric::Metric};
 
 const N: usize = 2;
 
-/// A shape whose type is parametrized over its shape (`e0` != `e1` != `e01` etc.) and its metric.
+/// A blade whose type is parametrized over its basis (e.g. `e0`) and its metric.
 ///
 /// Its implementation is blocked by
 /// https://github.com/rust-lang/project-const-generics/issues/28#issue-1178177928
@@ -13,44 +13,44 @@ const N: usize = 2;
 /// }
 /// ```
 #[derive(Debug, Clone, Copy)]
-struct Blade<const S: Shape<N>, const M: Metric<N>>(pub f64);
+struct Blade<const B: Basis<N>, const M: Metric<N>>(pub f64);
 
-impl<const S: Shape<N>, const M: Metric<N>> Blade<S, M> {
+impl<const B: Basis<N>, const M: Metric<N>> Blade<B, M> {
     pub const ZERO: Self = Blade(0.0);
     pub const ONE: Self = Blade(1.0);
 
     pub fn factor(self) -> f64 {
-        let Just((sign, _)) = S.0 else { return 0.0 };
+        let Just((sign, _)) = B.0 else { return 0.0 };
         sign * self.0
     }
 
-    pub fn geometric<const T: Shape<N>>(self, rhs: Blade<T, M>) -> Blade<{ S.geometric(T, M) }, M> {
+    pub fn geometric<const T: Basis<N>>(self, rhs: Blade<T, M>) -> Blade<{ B.geometric(T, M) }, M> {
         Blade(self.0 * rhs.0)
     }
 
-    pub fn exterior<const T: Shape<N>>(self, rhs: Blade<T, M>) -> Blade<{ S.exterior(T, M) }, M> {
+    pub fn exterior<const T: Basis<N>>(self, rhs: Blade<T, M>) -> Blade<{ B.exterior(T, M) }, M> {
         Blade(self.0 * rhs.0)
     }
 
-    pub fn left_contraction<const T: Shape<N>>(
+    pub fn left_contraction<const T: Basis<N>>(
         self,
         rhs: Blade<T, M>,
-    ) -> Blade<{ S.left_contraction(T, M) }, M> {
+    ) -> Blade<{ B.left_contraction(T, M) }, M> {
         Blade(self.0 * rhs.0)
     }
 
-    pub fn right_contraction<const T: Shape<N>>(
+    pub fn right_contraction<const T: Basis<N>>(
         self,
         rhs: Blade<T, M>,
-    ) -> Blade<{ S.right_contraction(T, M) }, M> {
+    ) -> Blade<{ B.right_contraction(T, M) }, M> {
         Blade(self.0 * rhs.0)
     }
 
-    pub fn inner<const T: Shape<N>>(self, rhs: Blade<T, M>) -> Blade<{ S.inner(T, M) }, M> {
+    pub fn inner<const T: Basis<N>>(self, rhs: Blade<T, M>) -> Blade<{ B.inner(T, M) }, M> {
         Blade(self.0 * rhs.0)
     }
 
-    pub fn scalar<const T: Shape<N>>(self, rhs: Blade<T, M>) -> Blade<{ S.scalar(T, M) }, M> {
+    pub fn scalar<const T: Basis<N>>(self, rhs: Blade<T, M>) -> Blade<{ B.scalar(T, M) }, M> {
         Blade(self.0 * rhs.0)
     }
 
@@ -66,23 +66,23 @@ impl<const S: Shape<N>, const M: Metric<N>> Blade<S, M> {
     /// TODO: Currently, this ignores the norm of [rhs] in `B^-1`.
     /// Multivectors using this operation either need to scale the result by [rhs]'s reciprocal norm,
     /// or normalize [rhs] before projecting.
-    pub fn project<const T: Shape<N>>(
+    pub fn project<const T: Basis<N>>(
         self,
         rhs: Blade<T, M>,
-    ) -> Blade<{ S.left_contraction(T, M).reverse().left_contraction(T, M) }, M> {
+    ) -> Blade<{ B.left_contraction(T, M).reverse().left_contraction(T, M) }, M> {
         Blade(self.0 * rhs.0)
     }
 }
 
 // This does not work because we cannot be generic over `rhs`:
-// impl<const S: Shape<N>, const T: Shape<N>, const M: Metric<N>> std::ops::Mul for Blade<S, M> {
+// impl<const S: Basis<N>, const T: Basis<N>, const M: Metric<N>> std::ops::Mul for Blade<S, M> {
 //     type Output = Blade<{ S.geometric(T, M) }, M>;
 //     fn mul(self, rhs: Blade<T, M>) -> Self::Output {
 //         Blade(self.0 * rhs.0)
 //     }
 // }
 
-impl<const S: Shape<{ N }>, const M: Metric<{ N }>> std::ops::Neg for Blade<S, M> {
+impl<const S: Basis<{ N }>, const M: Metric<{ N }>> std::ops::Neg for Blade<S, M> {
     fn neg(self) -> Self {
         Blade(-self.0)
     }

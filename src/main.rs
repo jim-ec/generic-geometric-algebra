@@ -13,17 +13,17 @@
 #![feature(decl_macro)]
 
 mod algebra;
+mod basis;
 mod blade;
 mod common;
 mod macros;
 mod maybe;
 mod metric;
 mod mv;
-mod shape;
 mod sign;
 
+use basis::Basis;
 use maybe::Maybe::*;
-use shape::Shape;
 use sign::Sign;
 
 fn main() {
@@ -35,8 +35,8 @@ fn main() {
     let metric = GA::metric();
     println!("Metric: {metric}");
 
-    let a = Shape(Just((Sign::Pos, [true])));
-    let b = Shape(Just((Sign::Pos, [true])));
+    let a = Basis(Just((Sign::Pos, [true])));
+    let b = Basis(Just((Sign::Pos, [true])));
 
     println!("{a} {b} = {}", a.geometric(b, metric));
     println!("{a} ∧ {b} = {}", a.exterior(b, metric));
