@@ -1,6 +1,8 @@
 use crate::{
     common::pow,
+    // macros::repeat,
     metric::{Metric, Square},
+    repeat,
 };
 
 /// A geometric algebra:

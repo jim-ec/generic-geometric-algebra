@@ -1,7 +1,9 @@
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+use std::marker::ConstParamTy;
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq, ConstParamTy)]
 pub struct Metric<const N: usize>(pub [Square; N]);
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, ConstParamTy)]
 pub enum Square {
     Pos,
     Neg,

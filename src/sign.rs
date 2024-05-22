@@ -1,4 +1,6 @@
-#[derive(PartialEq, Eq, Debug, Clone, Copy)]
+use std::marker::ConstParamTy;
+
+#[derive(PartialEq, Eq, Debug, Clone, Copy, ConstParamTy)]
 pub enum Sign {
     Pos,
     Neg,

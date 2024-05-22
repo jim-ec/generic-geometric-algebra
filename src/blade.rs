@@ -1,4 +1,4 @@
-use crate::{metric::Metric, shape::Shape};
+use crate::{maybe::Maybe::Just, metric::Metric, shape::Shape};
 
 const N: usize = 2;
 
@@ -15,16 +15,12 @@ const N: usize = 2;
 #[derive(Debug, Clone, Copy)]
 struct Blade<const S: Shape<N>, const M: Metric<N>>(pub f64);
 
-fn foo<const LEN: usize, const ARR: [u8; LEN]>() -> [u8; LEN] {
-    ARR
-}
-
 impl<const S: Shape<N>, const M: Metric<N>> Blade<S, M> {
     pub const ZERO: Self = Blade(0.0);
     pub const ONE: Self = Blade(1.0);
 
     pub fn factor(self) -> f64 {
-        let Some((sign, _)) = S.0 else { return 0.0 };
+        let Just((sign, _)) = S.0 else { return 0.0 };
         sign * self.0
     }
 

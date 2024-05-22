@@ -1,18 +1,23 @@
+use std::marker::ConstParamTy;
+
 use crate::{
     common::{even, odd},
+    maybe::Maybe::{self, Just, Nothing},
     metric::{Metric, Square},
+    repeat,
     sign::Sign,
+    yeet,
 };
 
 /// Encodes a factorization of a blade:
 /// `A = B eᵢ` ⇔ `A[i]`
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub struct Shape<const N: usize>(pub Option<(Sign, [bool; N])>);
+#[derive(Debug, Clone, Copy, PartialEq, Eq, ConstParamTy)]
+pub struct Shape<const N: usize>(pub Maybe<(Sign, [bool; N])>);
 
 impl<const N: usize> Shape<N> {
-    pub const ZERO: Shape<N> = Shape(None);
-    pub const ONE: Shape<N> = Shape(Some((Sign::Pos, [false; N])));
-    pub const I: Shape<N> = Shape(Some((Sign::Pos, [true; N])));
+    pub const ZERO: Shape<N> = Shape(Nothing);
+    pub const ONE: Shape<N> = Shape(Just((Sign::Pos, [false; N])));
+    pub const I: Shape<N> = Shape(Just((Sign::Pos, [true; N])));
 
     // pub const N: usize = N;
     pub const fn foo(self) -> usize {
@@ -22,7 +27,10 @@ impl<const N: usize> Shape<N> {
     /// Parity of the reversion operator, rewriting its factors in reverse order.
     /// - `rev(eᵢⱼ) = eⱼᵢ = -eᵢⱼ` ⇔ `i ≠ j`
     pub const fn reverse(self) -> Shape<N> {
-        if let Some(r) = self.grade() && r > 0 && odd(r * (r - 1) / 2) {
+        if let Just(r) = self.grade()
+            && r > 0
+            && odd(r * (r - 1) / 2)
+        {
             self.neg()
         } else {
             self
@@ -31,7 +39,9 @@ impl<const N: usize> Shape<N> {
 
     /// Parity of the grade involution, reversing the sign of odd blades.
     pub const fn involute(self) -> Shape<N> {
-        if let Some(r) = self.grade() && even(r) {
+        if let Just(r) = self.grade()
+            && even(r)
+        {
             self
         } else {
             self.neg()
@@ -44,18 +54,22 @@ impl<const N: usize> Shape<N> {
     }
 
     pub const fn neg(self) -> Shape<N> {
-        let Some((sign, factors)) = self.0 else { return Shape::ZERO };
-        Shape(Some((sign.neg(), factors)))
+        let Just((sign, factors)) = self.0 else {
+            return Shape::ZERO;
+        };
+        Shape(Just((sign.neg(), factors)))
     }
 
     /// Poincaré duality operator
     pub const fn dual(self) -> Shape<N> {
-        let Some(rhs) = self.0 else { return Shape::ZERO };
+        let Just(rhs) = self.0 else {
+            return Shape::ZERO;
+        };
         let mut dual = [false; N];
         repeat!(i in 0..N {
             dual[i] = !rhs.1[i];
         });
-        Shape(Some((rhs.0, dual)))
+        Shape(Just((rhs.0, dual)))
     }
 
     /// Compute the geometric product between two blades.
@@ -63,8 +77,10 @@ impl<const N: usize> Shape<N> {
     /// - `eᵢeⱼ = eᵢⱼ` ⇔ `i ≠ j`
     ///- `eᵢeⱼ = -eⱼeᵢ`
     pub const fn geometric(self, rhs: Shape<N>, metric: Metric<N>) -> Shape<N> {
-        let Some(lhs) = self.0 else { return Shape::ZERO };
-        let Some(rhs) = rhs.0 else { return Shape::ZERO };
+        let Just(lhs) = self.0 else {
+            return Shape::ZERO;
+        };
+        let Just(rhs) = rhs.0 else { return Shape::ZERO };
         let mut product = [false; N];
         let mut sign = lhs.0.mul(rhs.0);
         repeat!(i in 0..N {
@@ -97,7 +113,7 @@ impl<const N: usize> Shape<N> {
                 (false, false) => false,
             }
         });
-        Shape(Some((sign, product)))
+        Shape(Just((sign, product)))
     }
 
     // Compute the exterior product between two blades.
@@ -107,9 +123,9 @@ impl<const N: usize> Shape<N> {
     pub const fn exterior(self, rhs: Shape<N>, metric: Metric<N>) -> Shape<N> {
         let product = self.geometric(rhs, metric);
 
-        if let Some(r) = rhs.grade()
-            && let Some(l) = self.grade()
-            && let Some(p) =product.grade()
+        if let Just(r) = rhs.grade()
+            && let Just(l) = self.grade()
+            && let Just(p) = product.grade()
             && r + l == p
         {
             product
@@ -129,9 +145,9 @@ impl<const N: usize> Shape<N> {
     pub const fn left_contraction(self, rhs: Shape<N>, metric: Metric<N>) -> Shape<N> {
         let product = self.geometric(rhs, metric);
 
-        if let Some(r) = rhs.grade()
-            && let Some(l) = self.grade()
-            && let Some(p) = product.grade()
+        if let Just(r) = rhs.grade()
+            && let Just(l) = self.grade()
+            && let Just(p) = product.grade()
             && let Some(q) = r.checked_sub(l)
             && q == p
         {
@@ -154,9 +170,9 @@ impl<const N: usize> Shape<N> {
     pub const fn inner(self, rhs: Shape<N>, metric: Metric<N>) -> Shape<N> {
         let product = self.geometric(rhs, metric);
 
-        if let Some(r) = rhs.grade()
-            && let Some(l) = self.grade()
-            && let Some(p) = product.grade()
+        if let Just(r) = rhs.grade()
+            && let Just(l) = self.grade()
+            && let Just(p) = product.grade()
             && r.abs_diff(l) == p
         {
             product
@@ -170,35 +186,37 @@ impl<const N: usize> Shape<N> {
     /// `A~ * A` can be used as the squared norm of `A`.
     pub const fn scalar(self, rhs: Shape<N>, metric: Metric<N>) -> Shape<N> {
         let product = self.geometric(rhs, metric);
-        if let Some(p) = product.grade() && p == 0 {
+        if let Just(p) = product.grade()
+            && p == 0
+        {
             product
         } else {
             Shape::ZERO
         }
     }
 
-    /// The *grade* (sometime also called *step*) of this blade, equating to the number of distinct factors.
-    /// Returns [None] if this shape is vanishing.
-    pub const fn grade(self) -> Option<usize> {
-        let (_, factors) = self.0?;
+    /// The *grade* (Justtime also called *step*) of this blade, equating to the number of distinct factors.
+    /// Returns [Nothing] if this shape is vanishing.
+    pub const fn grade(self) -> Maybe<usize> {
+        let (_, factors) = yeet!(self.0);
         let mut grade = 0;
         repeat!(i in 0..N {
             if factors[i] {
                 grade += 1;
             }
         });
-        Some(grade)
+        Just(grade)
     }
 
-    pub const fn anti_grade(self) -> Option<usize> {
-        Some(N - self.grade()?)
+    pub const fn anti_grade(self) -> Maybe<usize> {
+        Just(N - yeet!(self.grade()))
     }
 }
 
 impl<const N: usize> std::fmt::Display for Shape<N> {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        let (Some(r), Some((sign, factors))) = (self.grade(), self.0) else {
-            return write!(f, "0")
+        let (Just(r), Just((sign, factors))) = (self.grade(), self.0) else {
+            return write!(f, "0");
         };
         write!(f, "{sign}")?;
         if r == N {
