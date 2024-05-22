@@ -22,6 +22,9 @@ mod metric;
 mod mv;
 mod sign;
 
+#[cfg(test)]
+mod test;
+
 use basis::NonzeroBasis;
 use sign::Sign;
 
