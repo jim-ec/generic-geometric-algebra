@@ -21,7 +21,7 @@ pub const fn pow(n: usize, mut k: usize) -> usize {
 }
 
 pub fn concat<const N: usize, const M: usize>(a: [i32; N], b: [i32; M]) -> [i32; N + M] {
-    let mut result = [0i32; N + M];
+    let mut result = [0; N + M];
     for i in 0..N {
         result[i] = a[i];
     }
