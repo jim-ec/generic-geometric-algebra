@@ -19,9 +19,9 @@ impl<const B: Basis<N>, const M: Metric<N>> Blade<B, M> {
     pub const ZERO: Self = Blade(0.0);
     pub const ONE: Self = Blade(1.0);
 
-    pub fn factor(self) -> f64 {
-        let Just((sign, _)) = B.0 else { return 0.0 };
-        sign * self.0
+    pub fn scale(self) -> f64 {
+        let Just(basis) = B else { return 0.0 };
+        basis.sign * self.0
     }
 
     pub fn geometric<const T: Basis<N>>(self, rhs: Blade<T, M>) -> Blade<{ B.geometric(T, M) }, M> {

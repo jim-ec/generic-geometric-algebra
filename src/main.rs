@@ -22,8 +22,7 @@ mod metric;
 mod mv;
 mod sign;
 
-use basis::Basis;
-use maybe::Maybe::*;
+use basis::NonzeroBasis;
 use sign::Sign;
 
 fn main() {
@@ -35,8 +34,14 @@ fn main() {
     let metric = GA::metric();
     println!("Metric: {metric}");
 
-    let a = Basis(Just((Sign::Pos, [true])));
-    let b = Basis(Just((Sign::Pos, [true])));
+    let a = NonzeroBasis {
+        sign: Sign::Pos,
+        unit: [true],
+    };
+    let b = NonzeroBasis {
+        sign: Sign::Pos,
+        unit: [true],
+    };
 
     println!("{a} {b} = {}", a.geometric(b, metric));
     println!("{a} ∧ {b} = {}", a.exterior(b, metric));
