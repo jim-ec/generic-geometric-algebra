@@ -7,7 +7,6 @@
 #![feature(const_trait_impl)]
 #![feature(const_try)]
 #![feature(never_type)]
-#![feature(const_option)]
 #![feature(let_chains)]
 #![feature(try_trait_v2)]
 #![feature(decl_macro)]
