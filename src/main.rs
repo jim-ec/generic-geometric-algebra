@@ -10,6 +10,7 @@
 #![feature(let_chains)]
 #![feature(try_trait_v2)]
 #![feature(decl_macro)]
+// #![feature(effects)]
 
 mod algebra;
 mod basis;
