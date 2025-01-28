@@ -47,3 +47,31 @@ fn test_complex_basis() {
         "i * i = -1"
     );
 }
+
+#[test]
+fn main() {
+    type GA = algebra::Complex;
+
+    println!("Algebra Dimension: {}", GA::DIM);
+    println!("Blade count: {}", GA::BASIS_BLADE_COUNT);
+
+    let metric = GA::metric();
+    println!("Metric: {metric}");
+
+    let a = NonzeroBasis {
+        sign: Sign::Pos,
+        unit: [true],
+    };
+    let b = NonzeroBasis {
+        sign: Sign::Pos,
+        unit: [true],
+    };
+
+    println!("{a} {b} = {}", a.geometric(b, metric));
+    println!("{a} ∧ {b} = {}", a.exterior(b, metric));
+    println!("{a} ∨ {b} = {}", a.regressive(b, metric));
+    println!("{a} >> {b} = {}", a.left_contraction(b, metric));
+    println!("{a} << {b} = {}", a.right_contraction(b, metric));
+    println!("{a} | {b} = {}", a.inner(b, metric));
+    println!("{a} * {b} = {}", a.scalar(b, metric));
+}

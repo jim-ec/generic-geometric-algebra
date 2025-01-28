@@ -7,10 +7,10 @@ const N: usize = 2;
 /// Its implementation is blocked by
 /// https://github.com/rust-lang/project-const-generics/issues/28#issue-1178177928
 /// which would enable generic const parameter types like this:
-/// ```
-fn foo<const LEN: usize, const ARR: [u8; LEN]>() -> [u8; LEN] {
-    ARR
-}
+/// ```compile_fail
+/// fn foo<const LEN: usize, const ARR: [u8; LEN]>() -> [u8; LEN] {
+///     ARR
+/// }
 /// ```
 #[derive(Debug, Clone, Copy)]
 struct Blade<const B: Basis<N>, const M: Metric<N>>(pub f64);

@@ -18,6 +18,14 @@ pub macro repeat($i:ident in $from:tt..$to:tt $body:block) {
 }
 
 /// Emulates the `?` operator for `Maybe` values. Can be used inside constant functions.
+///
+/// No longer needed when this compiles:
+/// ```compile_fail
+/// pub const fn foo(n: Option<usize>) -> Option<usize> {
+///     let x=  n?;
+///     Some(x + 1)
+/// }
+/// ```
 pub macro yeet($x:expr) {
     match $x {
         crate::maybe::Maybe::Just(x) => x,
